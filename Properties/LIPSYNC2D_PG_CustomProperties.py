@@ -154,7 +154,17 @@ def get_lip_sync_type_items(self, context: BpyContext | None):
 
 
 def poll_pose_assets(self, obj: bpy.types.ID):
-    return bool(obj.asset_data)
+    # Ensure it's an Action
+    if not isinstance(obj, bpy.types.Action):
+        return False
+    
+    # Must have asset data (be marked as a pose asset)
+    if not obj.asset_data:
+        return False
+    
+    # Allow local, linked, and library override actions
+    # This is necessary because linked library pose assets should still be usable
+    return True
 
 
 class LIPSYNC2D_PG_CustomProperties(bpy.types.PropertyGroup):
@@ -373,5 +383,6 @@ class LIPSYNC2D_PG_CustomProperties(bpy.types.PropertyGroup):
                     name=f"Viseme {name}",
                     description=desc,
                     poll=poll_pose_assets,
-                ),
+                    override={'LIBRARY_OVERRIDABLE'}
+                ),  # type: ignore
             )
