@@ -57,29 +57,11 @@ class LIPSYNC_SpriteSheetAnimator:
         :type obj: BpyObject
         :return: None
         """
-        if (action := obj.animation_data.action) is None:
-            return
-
-        # Retrieve the strip and channelbag correctly for Layered Actions
-        # Assuming single layer/strip structure as per setup()
-        if not action.layers or not action.layers[0].strips:
-             return
-
-        strip = cast(BpyActionKeyframeStrip, action.layers[0].strips[0])
-        
-        # Ensure we get the correct slot for sprite sheet
-        slot = action.slots.get(f"OB{SLOT_SPRITE_SHEET_NAME}")
-        if not slot:
-             return
-
-        try:
-             channelbag = strip.channelbag(slot)
-             for fcurve in channelbag.fcurves:
+        action = obj.animation_data.action if obj.animation_data else None
+        if action:
+            for fcurve in action.fcurves:
                 if fcurve.data_path == "lipsync2d_props.lip_sync_2d_sprite_sheet_index":
                     fcurve.keyframe_points.clear()
-        except Exception:
-             # Fallback or silence if channelbag creation fails (though it should exist if we are clearing)
-             pass
 
     def insert_keyframes(self, obj: BpyObject, props: BpyPropertyGroup, visemes_data: VisemeData,
                          word_timing: WordTiming,
@@ -221,29 +203,12 @@ class LIPSYNC_SpriteSheetAnimator:
         :type obj: BpyObject
         :return: None
         """
-        if (action := obj.animation_data.action) is None:
-             return
-        
-        # We can try to use self.channelbag if it's already set up, but to be robust
-        # we re-fetch it similar to clear_previous_keyframes to ensure we have the right one.
-        
-        if not action.layers or not action.layers[0].strips:
-             return
+        action = obj.animation_data.action if obj.animation_data else None
 
-        strip = cast(BpyActionKeyframeStrip, action.layers[0].strips[0])
-        # Ensure we get the correct slot for sprite sheet
-        slot = action.slots.get(f"OB{SLOT_SPRITE_SHEET_NAME}")
-        
-        if not slot:
-             return
-
-        try:
-            channelbag = strip.channelbag(slot)
-            for fcurve in channelbag.fcurves:
+        if action:
+            for fcurve in action.fcurves:
                 for keyframe in fcurve.keyframe_points:
                     keyframe.interpolation = 'CONSTANT'
-        except Exception:
-            pass
 
     def setup(self, obj: BpyObject):
         self.setup_animation_properties(obj)
