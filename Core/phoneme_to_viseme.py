@@ -63,6 +63,7 @@ phoneme_to_viseme_arkit_v2 = {
     # aa – open and low/mid front vowels
     "a": "aa",
     "aː": "aa",
+    "ɑː": "aa",
     "ä": "aa",
     "æ": "aa",
     "ɐ": "aa",
