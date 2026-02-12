@@ -43,6 +43,10 @@ class LIPSYNC2D_OT_AnalyzeAudio(bpy.types.Operator):
     ) -> set[
         Literal["RUNNING_MODAL", "CANCELLED", "FINISHED", "PASS_THROUGH", "INTERFACE"]
     ]:
+        # Set cursor to thinking/wait mode
+        if context.window:
+            context.window.cursor_modal_set('WAIT')
+        
         prefs = context.preferences.addons[get_package_name()].preferences  # type: ignore
         obj = context.active_object
 
@@ -52,6 +56,8 @@ class LIPSYNC2D_OT_AnalyzeAudio(bpy.types.Operator):
             or context.scene.sequence_editor is None
         ):
             self.report(type={"ERROR"}, message="No Sequence Editor found")
+            if context.window:
+                context.window.cursor_modal_restore()
             return {"CANCELLED"}
 
         all_strips = context.scene.sequence_editor.strips_all
@@ -59,6 +65,8 @@ class LIPSYNC2D_OT_AnalyzeAudio(bpy.types.Operator):
 
         if not has_sound:
             self.report(type={"ERROR"}, message="No sound detected in Sequence Editor")
+            if context.window:
+                context.window.cursor_modal_restore()
             return {"CANCELLED"}
 
         self.set_bake_range()
@@ -70,6 +78,8 @@ class LIPSYNC2D_OT_AnalyzeAudio(bpy.types.Operator):
                 message="Error while importing extracted audio WAV file from /tmp",
             )
             self.reset_bake_range()
+            if context.window:
+                context.window.cursor_modal_restore()
             return {"CANCELLED"}
 
         model = self.get_model(prefs)
@@ -78,6 +88,8 @@ class LIPSYNC2D_OT_AnalyzeAudio(bpy.types.Operator):
         if "result" not in result:
             self.reset_bake_range()
             os.remove(file_path)  # Need to be removed AFTER vosk_recognize_voice
+            if context.window:
+                context.window.cursor_modal_restore()
             return {"FINISHED"}
 
         recognized_words = result["result"]
@@ -105,6 +117,10 @@ class LIPSYNC2D_OT_AnalyzeAudio(bpy.types.Operator):
         self.report(
             {"INFO"}, message=f"{auto_obj.inserted_keyframes} keyframes inserted"
         )
+        
+        # Restore cursor
+        if context.window:
+            context.window.cursor_modal_restore()
 
         return {"FINISHED"}
 
